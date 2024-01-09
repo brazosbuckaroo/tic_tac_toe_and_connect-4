@@ -19,3 +19,5 @@ way to learn Rust before I go on to do anything more complicated.
 * Allow users to change what their sprite is between rounds
 * Keep track of scores outside of each round so players can keep their score until they want to switch players
 
+### Known Bugs ###
+* Move logic for Connect-4 is not accurate to what it is in the real world

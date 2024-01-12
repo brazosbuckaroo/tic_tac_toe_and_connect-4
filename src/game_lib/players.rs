@@ -1,4 +1,5 @@
 use std::fmt;
+use colored::Colorize;
 
 /// Represents a Player a name. sprite (something to repsents a player),
 /// and keeps track of how many times the player won
@@ -31,10 +32,10 @@ impl<'a> Player<'a> {
     ///
     /// println!("Test Player: \n {test_player}");
     /// ```
-    pub fn new(username: String, user_sprite: &'a str) -> Self {
+    pub fn new(username: String, sprite: &'a str) -> Self {
         Player {
             username,
-            sprite: user_sprite,
+            sprite,
             total_wins: 0,
         }
     }
@@ -64,11 +65,11 @@ impl<'a> Player<'a> {
     /// match test_board.game_status {
     ///     GameStatus::Win(player) => {
     ///             if player.sprite == test_player_1.sprite {
-    ///                 test_player_1.update_wins(1);
     ///                 println!("{player} won!", player = test_player_1.username);   
+    ///                 test_player_1.update_wins(1);
     ///             } else {
-    ///                 test_player_2.update_wins(1);
-    ///                 println!("{player} won!", player = test_player_2.username);   
+    ///                 println!("{player} won!", player = test_player_2.username); 
+    ///                 test_player_2.update_wins(1);  
     ///             }
     ///         }
     ///     GameStatus::Tie => (),
@@ -76,7 +77,47 @@ impl<'a> Player<'a> {
     ///     }
     /// ```
     pub fn update_wins(&mut self, update_scale: usize) {
-        self.total_wins += update_scale
+        self.total_wins += update_scale;
+    }
+
+    /// Resets the players wins to zero.
+    ///
+    /// # Examples
+    ///
+    /// ``` 
+    /// use crate::game_lib::game::GameBoard;
+    /// use crate::game_lib::game::GameStatus;
+    ///
+    /// let mut test_player_1 = Player::new("User 1", "X");
+    /// let mut test_player_2 = Player::new("User 2", "O");
+    /// let mut test_board = Gameboard::new("Test Game", 3, &test_player_1, &test_player_2);
+    ///
+    /// test_board.play_move(1);
+    /// test_board.play_move(4);
+    /// test_board.play_move(2);
+    /// test_board.play_move(9);
+    /// test_board.play_move(3);
+    ///
+    /// match test_board.game_status {
+    ///     GameStatus::Win(player) => {
+    ///             if player.sprite == test_player_1.sprite {
+    ///                 println!("{player} won!", player = test_player_1.username);   
+    ///                 test_player_1.update_wins(1);
+    ///             } else {
+    ///                 println!("{player} won!", player = test_player_2.username); 
+    ///                 test_player_2.update_wins(1);  
+    ///             }
+    ///         }
+    ///     GameStatus::Tie => (),
+    ///     GameStatus::Continue => (),
+    ///     }
+    ///
+    /// test_player_1.clear_wins();
+    ///
+    /// println!("test_player_1");
+    /// ```
+    pub fn clear_wins(&mut self) {
+        self.total_wins = 0;
     }
 
     /// Edits the username of the player
@@ -104,6 +145,8 @@ impl<'a> Player<'a> {
 impl<'b> fmt::Display for Player<'b> {
     // just print out the players name
     fn fmt(&self, format_buffer: & mut fmt::Formatter) -> fmt::Result {
-        write!(format_buffer, "{username}: {wins} win(s)", username = self.username, wins =self.total_wins)
+        write!(format_buffer, "{username}: {wins} win(s)", 
+            username = self.username.bold(), 
+            wins =self.total_wins.to_string().italic().bold())
     }
 }

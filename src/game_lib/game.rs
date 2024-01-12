@@ -1,5 +1,6 @@
 use std::fmt;
 use std::mem;
+use colored::Colorize;
 use crate::game_lib::players::Player;
 
 /// An enumerator that represents whether a players move was
@@ -108,7 +109,7 @@ impl<'a,> GameBoard<'a> {
     /// let mut test_game = GameBoard::new("Test Game", 3);
     /// let mut test_player = Player::new("Test Player", "X");
     ///
-    /// test_game.play_move(&test_player, 3);
+    /// test_game.play_move(3);
     ///
     /// println!("{test_game}");
     /// ```
@@ -121,14 +122,35 @@ impl<'a,> GameBoard<'a> {
         // check to see if it was a valid move
         match self.valid_move(selected_cell) {
             MoveStatus::Valid => {
-                // automatically adjust user input to match Vec
-                self.grid[selected_cell - 1] = self.current_player.sprite;
-                self.num_of_turns += 1;
+                // adjust logic based on board size
+                match self.grid_size {
+                    4 => { 
+                        // connect-4 specific rules
+                        let mut temp = selected_cell + (self.grid_size - 1);
+
+                        for _cell in 0..self.grid_size {
+                            if self.grid[temp].is_empty() && temp + self.grid_size < self.grid.len() {
+                                temp += 4;
+                            }
+                        }
+
+                        if self.grid[temp] == self.current_player.sprite || self.grid[temp] == self.other_player.sprite {
+                            temp -= 4;
+                        }
+
+                        self.grid[temp] = self.current_player.sprite;
+                        self.num_of_turns += 1;
+                    }
+                    _ => {
+                        self.grid[selected_cell - 1] = self.current_player.sprite;
+                        self.num_of_turns += 1;
+                    }
+                }
 
                 // check to see if its worth checking if someone could win
                 let check_turns: bool = self.num_of_turns >= self.grid_size + 2;
 
-               match check_turns {
+                match check_turns {
                     true => {
                         // check to see if the player won
                         if self.is_won() {
@@ -151,7 +173,7 @@ impl<'a,> GameBoard<'a> {
 
             }
             MoveStatus::Invalid(error_mssg) => {
-                eprintln!("{error_mssg}");
+                eprintln!("{error_mssg}", error_mssg = error_mssg.red().bold());
 
                 self.game_status = GameStatus::Continue;
             }
@@ -209,7 +231,7 @@ impl<'a,> GameBoard<'a> {
     /// test_game.play_move(5);
     /// test_game.play_move(3);
     ///
-    /// if is_won() {
+    /// if test_game.is_won() {
     ///     println!("Player 1 won!");   
     /// }
     /// ```
@@ -376,11 +398,12 @@ impl<'a,> GameBoard<'a> {
     /// test_game.play_move(5); // show an error
     /// ```
     fn valid_move(&self, selected_cell: usize) -> MoveStatus {
-        if selected_cell == 0 {
+        // general rules for the games
+        if selected_cell > self.grid_size * self.grid_size {
             return MoveStatus::Invalid("Invalid Cell because it was out of range. Please try again.")
         }
 
-        if selected_cell > self.grid_size * self.grid_size {
+        if selected_cell == 0 {
             return MoveStatus::Invalid("Invalid Cell because it was out of range. Please try again.")
         }
 
@@ -390,6 +413,11 @@ impl<'a,> GameBoard<'a> {
             return MoveStatus::Invalid("Invalid cell because a player was there. Please try again.")
         }
 
+        // connect-4 only rule
+        if selected_cell > self.grid_size && self.grid_size == 4 {
+            return MoveStatus::Invalid("Invalid column selected")
+        }
+
         MoveStatus::Valid
     }
 }
@@ -397,7 +425,6 @@ impl<'a,> GameBoard<'a> {
 // the formatter trait for the game struct
 impl<'a> fmt::Display for GameBoard <'a>{
     fn fmt(&self, format_buffer: & mut fmt::Formatter) -> fmt::Result {
-        //write!(format_buffer, "{game_name}\n ", game_name = self.name)?;
         write!(format_buffer, " ")?;
 
         let sprites = &self.grid;

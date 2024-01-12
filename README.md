@@ -4,22 +4,32 @@ A simple game engine to make a Tic-Tac-Toe or Connect-4 game. This is mostly bei
 way to learn Rust before I go on to do anything more complicated.
 
 
-### Current Features ###
+## Features ##
 
+### Current Features ###
 * Allows players to add their own name with a three character limit
 * Users can select whether they want to play Tic-Tac-Toe or Connect-4 
-* Keeps track of user scores per round
 * After each round, users are able to change their names
+* Keep track of scores outside of each round so players can keep their score until they want to switch players
+* Format error messages to be more clear and visible
 
 
 ### Planned Features ###
 * Allow user to play on a user selected sized grid
-* Format error messages to be more clear and visible
 * Improve the interface by allowing the user to select a cell with arrow keys
 * Allow users to change what their sprite is between rounds
-* Keep track of scores outside of each round so players can keep their score until they want to switch players
+
+
+## Bug Tracking ##
 
 ### Known Bugs ###
+
+
+### Fixed Bugs ###
 * Move logic for Connect-4 is not accurate to what it is in the real world
 * When asking to start a new round, anything that isn't 'N' can cause it to restart.
 * When starting a new round, after getting a new player name the wins are persistent
+
+
+## Dependencies ##
+* Rust "Colored" Crate - [Link](https://github.com/colored-rs/colored/tree/master?tab=readme-ov-file)

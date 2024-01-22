@@ -18,7 +18,7 @@ way to learn Rust before I go on to do anything more complicated.
 ### Planned Features ###
 * Improve the interface by allowing the user to select a cell with arrow keys
 * Allow users to change what their sprite is between rounds
-
+* Allow users to select which player to change the name of and reset wins
 
 ## Bug Tracking ##
 

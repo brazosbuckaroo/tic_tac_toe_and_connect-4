@@ -23,7 +23,6 @@ way to learn Rust before I go on to do anything more complicated.
 ## Bug Tracking ##
 
 ### Known Bugs ###
-* Winnging logic for Connect-4 marks a winner when there isn't a winner yet.
 
 ### Fixed Bugs ###
 * Move logic for Connect-4 is not accurate to what it is in the real world

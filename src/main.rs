@@ -39,34 +39,55 @@ fn main() {
     while user_input  != 0 {
         match user_input {
             1 => {
-                player_1 = check_player_name(player_1);
-                player_2 = check_player_name(player_2);
+                if matches!(player_1.username.as_str(), "") && matches!(player_2.username.as_str(), "") {
+                    let player_1_name = get_str_input(PLAYER_1_INPUT, 3);
+                    let player_2_name = get_str_input(PLAYER_2_INPUT, 3);
+            
+                    player_1.change_username(player_1_name);
+                    player_2.change_username(player_2_name);
+                }
 
                 play_game(&mut player_1, &mut player_2, "Tic-Tac-Toe", 3, &GameRule::TicTacToe);
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
             2 => {
-                player_1 = check_player_name(player_1);
-                player_2 = check_player_name(player_2);
+                if matches!(player_1.username.as_str(), "") && matches!(player_2.username.as_str(), "") {
+                    let player_1_name = get_str_input(PLAYER_1_INPUT, 3);
+                    let player_2_name = get_str_input(PLAYER_2_INPUT, 3);
+            
+                    player_1.change_username(player_1_name);
+                    player_2.change_username(player_2_name);
+                }
 
                 play_game(&mut player_1, &mut player_2, "Connect-4", 4, &GameRule::ConnectFour);
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
             3 => {
-                player_1 = check_player_name(player_1);
-                player_2 = check_player_name(player_2);
+                if matches!(player_1.username.as_str(), "") && matches!(player_2.username.as_str(), "") {
+                    let player_1_name = get_str_input(PLAYER_1_INPUT, 3);
+                    let player_2_name = get_str_input(PLAYER_2_INPUT, 3);
+            
+                    player_1.change_username(player_1_name);
+                    player_2.change_username(player_2_name);
+                }
 
                 println!();
 
-                let board_size = get_int_input(INPUT_QUESTION_3);
+                let mut board_size = get_int_input(INPUT_QUESTION_3);
+
+                while board_size == 255 {
+                    eprintln!("{error_mssg}", error_mssg = "Invalid board size input".bold().red());
+
+                    board_size = get_int_input(INPUT_QUESTION_3);
+                }
 
                 println!();
 
                 let mut game_rule = get_rule_input(INPUT_QUESTION_4);
 
-                while matches!(game_rule, GameRule::Invalid) {
+                while game_rule == GameRule::Invalid {
                     eprintln!("{error_mssg}", error_mssg = "You selected an invalid game rule. Please try again.".bold().red());
 
                     game_rule = get_rule_input(INPUT_QUESTION_4);
@@ -88,7 +109,7 @@ fn main() {
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
             _ => {
-                eprintln!("{error}", error = "Please enter a '1', '2', '3', `4`, or '0' to exit\n".red().bold());
+                eprintln!("{error}", error = "Please enter a '1', '2', '3', or '0' to exit\n".red().bold());
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
@@ -111,6 +132,11 @@ fn play_game(
         let mut game = GameBoard::new(game_name, grid_size, game_rule, player_1, player_2); // creates a new board
 
         println!("\nWelcome to {game_name}", game_name = game.name);
+        println!("{game}");
+        println!("\nCurrent Player: {name}", name = game.current_player.username);
+
+        let mut selected_cell = get_int_input("Select an open cell: ");
+        game.play_move(selected_cell);
 
         while game.game_status == GameStatus::Continue {
             eprint!("\n{game}");
@@ -119,11 +145,11 @@ fn play_game(
             // debug
             //println!("Testing Logic: {:?}", game.game_status);
 
-            let selected_cell: usize = if *game_rule == GameRule::ConnectFour {
-                    get_int_input("Select a column: ")
-                } else {
-                    get_int_input("Select an open cell: ")
-            };
+            if *game_rule == GameRule::ConnectFour {
+                selected_cell = get_int_input("Select a column: ");
+            } else {
+                selected_cell = get_int_input("Select an open cell: ");
+            }
 
             game.play_move(selected_cell);
         }
@@ -163,16 +189,6 @@ fn play_game(
         
         println!();
     }
-}
-
-fn check_player_name(mut player : Player) -> Player {
-    if matches!(player.username.as_str(), "") {
-        let player_name = get_str_input(PLAYER_1_INPUT, 3);
-
-        player.change_username(player_name);
-    }
-
-    player
 }
 
 fn get_rule_input(message: &str) -> GameRule {
@@ -219,25 +235,14 @@ fn get_int_input(message: &str) -> usize {
     eprint!("{message}");
 
     let mut user_input = String::new();
-
+    
     io::stdin()
         .read_line(&mut user_input)
         .expect("There was an issue getting user input.");
 
-    let mut user_int = user_input.trim().parse::<usize>();
+    let user_input = user_input.trim().parse::<usize>().unwrap_or({
+        255
+    });
 
-    while user_int.is_err() {
-        eprintln!("{error}", error = "There was an error getting your input. Try again".bold().red());
-        eprint!("{message}");
-
-        io::stdin()
-            .read_line(&mut user_input)
-            .expect("There was an issue getting user input.");
-
-        user_int = user_input.trim().parse::<usize>();
-    }
-
-    user_int.unwrap_or_else(|err| {
-        panic!("Something went really wrong. \nThe following is the error message: {err}");
-    })
+    user_input
 }

@@ -12,10 +12,10 @@ way to learn Rust before I go on to do anything more complicated.
 * After each round, users are able to change their names
 * Keep track of scores outside of each round so players can keep their score until they want to switch players
 * Format error messages to be more clear and visible
+* Allow user to play on a user selected sized grid
 
 
 ### Planned Features ###
-* Allow user to play on a user selected sized grid
 * Improve the interface by allowing the user to select a cell with arrow keys
 * Allow users to change what their sprite is between rounds
 

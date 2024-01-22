@@ -24,6 +24,7 @@ way to learn Rust before I go on to do anything more complicated.
 
 ### Known Bugs ###
 
+
 ### Fixed Bugs ###
 * Move logic for Connect-4 is not accurate to what it is in the real world
 * When asking to start a new round, anything that isn't 'N' can cause it to restart.

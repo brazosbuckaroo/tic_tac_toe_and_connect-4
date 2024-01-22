@@ -54,7 +54,7 @@ impl<'a> Player<'a> {
     ///
     /// let mut test_player_1 = Player::new("User 1", "X");
     /// let mut test_player_2 = Player::new("User 2", "O");
-    /// let mut test_board = Gameboard::new("Test Game", 3, &test_player_1, &test_player_2);
+    /// let mut test_board = Gameboard::new("Test Game", 3, GameRule::TicTacToe, &test_player_1, &test_player_2);
     ///
     /// test_board.play_move(1);
     /// test_board.play_move(4);
@@ -90,7 +90,7 @@ impl<'a> Player<'a> {
     ///
     /// let mut test_player_1 = Player::new("User 1", "X");
     /// let mut test_player_2 = Player::new("User 2", "O");
-    /// let mut test_board = Gameboard::new("Test Game", 3, &test_player_1, &test_player_2);
+    /// let mut test_board = Gameboard::new("Test Game", 3, GameRule::TicTacToe, &test_player_1, &test_player_2);
     ///
     /// test_board.play_move(1);
     /// test_board.play_move(4);
@@ -116,7 +116,7 @@ impl<'a> Player<'a> {
     ///
     /// println!("test_player_1");
     /// ```
-    pub fn clear_wins(&mut self) {
+    fn clear_wins(&mut self) {
         self.total_wins = 0;
     }
 
@@ -138,13 +138,15 @@ impl<'a> Player<'a> {
     /// println!("{test_player}");
     /// ```
     pub fn change_username(&mut self, updated_username: String) {
+        self.clear_wins();
+
         self.username = updated_username
     }
 }
 
 impl<'b> fmt::Display for Player<'b> {
     // just print out the players name
-    fn fmt(&self, format_buffer: & mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
         write!(format_buffer, "{username}: {wins} win(s)", 
             username = self.username.bold(), 
             wins =self.total_wins.to_string().italic().bold())

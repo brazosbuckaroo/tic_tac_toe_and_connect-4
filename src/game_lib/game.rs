@@ -13,6 +13,18 @@ enum MoveStatus<'a> {
     Invalid(&'a str),
 }
 
+/// An enumerator that represents the rules of the current game
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum GameRule {
+    /// `TicTacToe` -  User selection follows Tic-Tac-Toe Rules
+    TicTacToe,
+    /// `ConnectFour` - User selection follows Connect-4 Rules
+    ConnectFour,
+    /// `Invalid` - User selection was invalid
+    Invalid,
+}
+
 /// An enumerator that represents whether the game has
 /// been Won, Tied, or needs to continue
 #[derive(Debug)]
@@ -44,17 +56,19 @@ pub struct GameBoard<'a> {
     other_player: &'a Player<'a>,
     /// `game_status` - A GameStatus enum that keeps track of game progress
     pub game_status: GameStatus<'a>,
+    /// `game_rule` - An enum that tracks which rules the game currently follows
+    game_rule: &'a GameRule,
 }
 
 /// Game methods and functions
-impl<'a,> GameBoard<'a> {
-    /// Returns a game board with the specified arguments. Will panic if the board size is not 3 or 4. This
-    /// will be changed in the future in version 0.2.0.
+impl<'a> GameBoard<'a> {
+    /// Returns a game board with the specified arguments.
     ///
     /// # Arguments
     ///
     /// * `game_name` - A string slice that holds the name of the game being played
     /// * `board_size` - An integer that's used to make a N * N grid
+    /// * `game_rule` - A GameRule Enum that allows players to change the behavior of player placement
     /// * `player_1` - A reference to a player
     /// * `player_2` - A reference to a player
     ///
@@ -67,15 +81,17 @@ impl<'a,> GameBoard<'a> {
     ///
     /// let player_1 = Player::new("User 1", "X");
     /// let player_2 = Player::new("User 2", "O");
-    /// let test_game = GameBoard::new("Test Game", 3, &player_1, &player_2);
+    /// let test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
     ///
     /// println!("{test_game}");
     /// ```
-    pub fn new(game_name: &'a str, board_size: usize, player_1: &'a Player, player_2: &'a Player) -> Self {
-        if board_size != 3 && board_size != 4 {
-            panic!("You gave {board_size} as a board size! This is not valid at the moment. Try either `3` or `4.`");
-        }
-
+    pub fn new(
+        game_name: &'a str, 
+        board_size: usize,
+        game_rule: &'a GameRule, 
+        player_1: &'a Player, 
+        player_2: &'a Player,
+    ) -> GameBoard<'a> {
         GameBoard {
             name: game_name,
             grid_size: board_size,
@@ -84,6 +100,7 @@ impl<'a,> GameBoard<'a> {
             current_player: player_1,
             other_player: player_2,
             game_status: GameStatus::Continue,
+            game_rule,
         }
     }
 
@@ -106,14 +123,15 @@ impl<'a,> GameBoard<'a> {
     /// ```
     /// use crate::game_lib::players::Player;
     ///
-    /// let mut test_game = GameBoard::new("Test Game", 3);
-    /// let mut test_player = Player::new("Test Player", "X");
+    /// let player_1 = Player::new("User 1", "X");
+    /// let player_2 = Player::new("User 2", "O");
+    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
     ///
-    /// test_game.play_move(3);
+    /// test_game.player_move(1);
     ///
     /// println!("{test_game}");
     /// ```
-    pub fn play_move(& mut self, selected_cell: usize) {
+    pub fn play_move(&mut self, selected_cell: usize) {
         // debug
         //println!("Testing value: {}", self.grid[selected_cell - 1]);
         //println!("Testing Player 1 value: {}", self.player_1.sprite);
@@ -123,28 +141,30 @@ impl<'a,> GameBoard<'a> {
         match self.valid_move(selected_cell) {
             MoveStatus::Valid => {
                 // adjust logic based on board size
-                match self.grid_size {
-                    4 => { 
+                match self.game_rule {
+                    GameRule::ConnectFour => { 
                         // connect-4 specific rules
-                        let mut temp = selected_cell + (self.grid_size - 1);
+                        let mut cell_below = selected_cell + (self.grid_size - 1);
 
-                        for _cell in 0..self.grid_size {
-                            if self.grid[temp].is_empty() && temp + self.grid_size < self.grid.len() {
-                                temp += 4;
+                        for _column in 0..self.grid_size {
+                            if self.grid[cell_below].is_empty() && cell_below + self.grid_size < self.grid.len() {
+                                cell_below += self.grid_size;
                             }
                         }
 
-                        if self.grid[temp] == self.current_player.sprite || self.grid[temp] == self.other_player.sprite {
-                            temp -= 4;
+                        // adjust to place the player above the last player
+                        if self.grid[cell_below] == self.current_player.sprite || self.grid[cell_below] == self.other_player.sprite {
+                            cell_below -= self.grid_size;
                         }
 
-                        self.grid[temp] = self.current_player.sprite;
+                        self.grid[cell_below] = self.current_player.sprite;
                         self.num_of_turns += 1;
                     }
-                    _ => {
+                    GameRule::TicTacToe => {
                         self.grid[selected_cell - 1] = self.current_player.sprite;
                         self.num_of_turns += 1;
                     }
+                    GameRule::Invalid => panic!("Something went wrong with game rule selection"),
                 }
 
                 // check to see if its worth checking if someone could win
@@ -180,8 +200,7 @@ impl<'a,> GameBoard<'a> {
         }
     }
 
-    /// A mutator that uses a temporary storage variable to swap which player is player after a successful
-    /// move.
+    /// A mutator that allows the user to swap players after a move.
     ///
     /// # Arguments
     ///
@@ -194,15 +213,15 @@ impl<'a,> GameBoard<'a> {
     ///
     /// let mut player_1 = Player::new("User 1", "X");
     /// let mut player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.play_move(3); // autmatically calls the switch_player function
     /// test_game.play_move(1); // autmatically calls the switch_player function
     ///
     /// println!("{test_game}");
     /// ```
-    fn switch_player(& mut self) {
-        mem::swap(& mut self.current_player, & mut self.other_player)
+    fn switch_player(&mut self) {
+        mem::swap(&mut self.current_player, &mut self.other_player)
     }
 
     /// Returns false or a true depending on the outcome of board check
@@ -214,7 +233,7 @@ impl<'a,> GameBoard<'a> {
     /// # Arguments
     ///
     /// * `self` - A mutable reference to gameboard
-    /// * `player` -  A reference to a player struct
+    /// * `selected_cell` -  A reference to a player struct
     ///
     /// # Examples
     ///
@@ -223,7 +242,7 @@ impl<'a,> GameBoard<'a> {
     ///
     /// let mut player_1 = Player::new("User 1", "X");
     /// let mut player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.play_move(1);
     /// test_game.play_move(4);
@@ -236,143 +255,113 @@ impl<'a,> GameBoard<'a> {
     /// }
     /// ```
     fn is_won(&self) -> bool {
-        // see if player won depending on the game the user selected
-        match self.grid_size {
-            3 => {
-                // rows
-                if self.grid[0] == self.current_player.sprite && self.grid[1] == self.current_player.sprite && 
-                    self.grid[2]  == self.current_player.sprite 
-                {
+        // testing new column logic
+        for column in 0..self.grid_size {
+            let mut cell_below: usize = column; 
+            let mut player_counter: usize = 0; // reset counter
+
+            for _cell in 0..self.grid_size {
+                // debug
+                //eprintln!("Testing cell after selected: {}", cell_below);
+
+                // seeing if the player is there
+                if self.grid[cell_below] == self.current_player.sprite {
+                    player_counter += 1;
+                }
+
+                // debug
+                //println!("Player Counter: {}", player_counter);
+
+                // did someone win
+                if player_counter == self.grid_size {
                     return true
                 }
-        
-                if self.grid[3] == self.current_player.sprite && self.grid[4] == self.current_player.sprite && 
-                    self.grid[5]  == self.current_player.sprite 
-                {
-                    return true
-                }
-        
-                if self.grid[6] == self.current_player.sprite && self.grid[7] == self.current_player.sprite && 
-                    self.grid[8]  == self.current_player.sprite 
-                {
-                    return true
-                }
-        
-                // columns
-                if self.grid[0] == self.current_player.sprite && self.grid[3]== self.current_player.sprite && 
-                    self.grid[6]  == self.current_player.sprite 
-                {
-                    return true
-                }
-        
-                if self.grid[1] == self.current_player.sprite && self.grid[4]== self.current_player.sprite && 
-                    self.grid[7]  == self.current_player.sprite 
-                {
-                    return true
-                }
-        
-                if self.grid[2] == self.current_player.sprite && self.grid[5]== self.current_player.sprite && 
-                    self.grid[8]  == self.current_player.sprite 
-                {
-                    return true
-                }
-        
-                // diag
-                if self.grid[0] == self.current_player.sprite && self.grid[4]== self.current_player.sprite && 
-                    self.grid[8]  == self.current_player.sprite 
-                {
-                    return true
-                }
-        
-                // anti diag
-                if self.grid[2] == self.current_player.sprite && self.grid[4]== self.current_player.sprite && 
-                    self.grid[6]  == self.current_player.sprite 
-                {
-                    return true
+
+                // moving forward
+                if cell_below + self.grid_size <= (self.grid_size * self.grid_size) {
+                    cell_below += self.grid_size;
                 }
             }
-            4 => {
-                // rows
-                if self.grid[0] == self.current_player.sprite && self.grid[1] == self.current_player.sprite && 
-                    self.grid[2] == self.current_player.sprite && 
-                    self.grid[3] == self.current_player.sprite 
-                {
+        }
+
+        // new row logic
+        for row in 0..self.grid_size {
+            let mut next_cell: usize = row * self.grid_size;
+            let mut player_counter: usize = 0; // reset counter
+
+            for _cell in 0..self.grid_size {
+                // compare cell
+                if self.grid[next_cell] == self.current_player.sprite {
+                    player_counter += 1;
+                }
+
+                // debug
+                //println!("Player Counter: {} {_cell}", player_counter);
+
+                // see if a player won
+                if player_counter == self.grid_size {
                     return true
                 }
 
-                if self.grid[4] == self.current_player.sprite && self.grid[5] ==self.current_player.sprite && 
-                    self.grid[6] == self.current_player.sprite && 
-                    self.grid[7] == self.current_player.sprite
-                {
-                    return true
+                // don't increment if were at the end of a row
+                if next_cell + 1 < (self.grid_size * row) + self.grid_size {
+                    next_cell += 1;
                 }
-
-                if self.grid[8] == self.current_player.sprite && self.grid[9] == self.current_player.sprite && 
-                    self.grid[10] == self.current_player.sprite && 
-                    self.grid[11] == self.current_player.sprite
-                {
-                    return true
-                }          
-                
-                if self.grid[12] == self.current_player.sprite && self.grid[13] == self.current_player.sprite && 
-                    self.grid[14] == self.current_player.sprite && 
-                    self.grid[15] == self.current_player.sprite 
-                {
-                    return true
-                } 
-
-                // columns
-                if self.grid[0] == self.current_player.sprite && self.grid[4] == self.current_player.sprite && 
-                    self.grid[8] == self.current_player.sprite && 
-                    self.grid[12] == self.current_player.sprite
-                {
-                    return true
-                }
-                
-                if self.grid[1] == self.current_player.sprite && self.grid[5] == self.current_player.sprite && 
-                    self.grid[9] == self.current_player.sprite && 
-                    self.grid[13] == self.current_player.sprite
-                {
-                    return true
-                }      
-
-                if self.grid[2] == self.current_player.sprite && self.grid[6] == self.current_player.sprite && 
-                    self.grid[10] == self.current_player.sprite && 
-                    self.grid[14] == self.current_player.sprite
-                {
-                    return true
-                }
-
-                if self.grid[3] == self.current_player.sprite && self.grid[7] == self.current_player.sprite && 
-                    self.grid[11] == self.current_player.sprite && 
-                    self.grid[15] == self.current_player.sprite 
-                {
-                    return true
-                }            
-
-                // diag
-                if self.grid[0] == self.current_player.sprite && self.grid[5] == self.current_player.sprite && 
-                    self.grid[10] == self.current_player.sprite && 
-                    self.grid[15] == self.current_player.sprite 
-                {
-                    return true
-                }       
-                
-                // anti diag
-                if self.grid[3] == self.current_player.sprite && self.grid[6] == self.current_player.sprite && 
-                    self.grid[9] == self.current_player.sprite && 
-                    self.grid[12] == self.current_player.sprite
-                {
-                    return true
-                }     
             }
-            _ => panic!("Not a valid grid size: Should be either 3 or 4. You selected {user_size}.", user_size = self.grid_size),
+        }
+
+        // new diag logic
+        let mut next_cell: usize = 0;
+        let mut player_counter: usize = 0; // reset counter
+
+        for offset in 0..self.grid_size {
+            // debug
+            //eprintln!("Testing next cell: {}", next_cell + offset);
+
+            // compare cell
+            if self.grid[next_cell + offset] == self.current_player.sprite {
+                player_counter += 1;
+            }
+
+            // see if they won
+            if player_counter == self.grid_size{
+                return true
+            }
+
+            // next cell
+            if next_cell + self.grid_size <= (self.grid_size * self.grid_size) {
+                next_cell += self.grid_size;
+            }
+        }
+
+        // new anti diag logic
+        let mut next_cell: usize = 0;
+        let mut player_counter: usize = 0; // reset counter
+
+        for offset in (0..self.grid_size).rev() {
+            // debug
+            //eprintln!("Testing next cell: {}", next_cell + offset);
+
+            // compare cell
+            if self.grid[next_cell + offset] == self.current_player.sprite {
+                player_counter += 1;
+            }
+
+            // see if they won
+            if player_counter == self.grid_size {
+                return true
+            }
+
+            // next cell
+            if next_cell + self.grid_size <= (self.grid_size * self.grid_size) {
+                next_cell += self.grid_size;
+            }
         }
 
         false
     }
 
-    /// Returns true or false depending on if the player made a valid move
+    /// Returns an MoveStatus enum that is either `Valid` or `Invalid` based on players move 
     ///
     ///
     /// # Arguments
@@ -387,7 +376,7 @@ impl<'a,> GameBoard<'a> {
     ///
     /// let mut player_1 = Player::new("User 1", "X");
     /// let mut player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.play_move(1);
     /// test_game.play_move(4);
@@ -399,11 +388,7 @@ impl<'a,> GameBoard<'a> {
     /// ```
     fn valid_move(&self, selected_cell: usize) -> MoveStatus {
         // general rules for the games
-        if selected_cell > self.grid_size * self.grid_size {
-            return MoveStatus::Invalid("Invalid Cell because it was out of range. Please try again.")
-        }
-
-        if selected_cell == 0 {
+        if selected_cell > self.grid_size * self.grid_size || selected_cell < 1 {
             return MoveStatus::Invalid("Invalid Cell because it was out of range. Please try again.")
         }
 
@@ -414,7 +399,7 @@ impl<'a,> GameBoard<'a> {
         }
 
         // connect-4 only rule
-        if selected_cell > self.grid_size && self.grid_size == 4 {
+        if selected_cell > self.grid_size && *self.game_rule == GameRule::ConnectFour {
             return MoveStatus::Invalid("Invalid column selected")
         }
 
@@ -423,8 +408,8 @@ impl<'a,> GameBoard<'a> {
 }
 
 // the formatter trait for the game struct
-impl<'a> fmt::Display for GameBoard <'a>{
-    fn fmt(&self, format_buffer: & mut fmt::Formatter) -> fmt::Result {
+impl<'a> fmt::Display for GameBoard <'a> {
+    fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
         write!(format_buffer, " ")?;
 
         let sprites = &self.grid;

@@ -5,17 +5,17 @@ use colored::Colorize;
 /// and keeps track of how many times the player won
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub struct Player<'a> {
+pub struct Player {
     /// `username` - A string literal to represent the name of the player
     pub username: String, 
     /// `sprite` - A string literal used to represent the player on grid
-    pub sprite: &'a str,
+    pub sprite: String,
     /// `total_wins` - An arch-sized unsigned integer used to keep track of player wins
     pub total_wins: usize,
 }
 
 /// Player methods and functions
-impl<'a> Player<'a> {
+impl Player {
     /// Returns a player with the name given them and a symbol used to 
     /// represent them on the game board. Players are also able to track 
     /// the amount of wins they have
@@ -32,7 +32,7 @@ impl<'a> Player<'a> {
     ///
     /// println!("Test Player: \n {test_player}");
     /// ```
-    pub fn new(username: String, sprite: &'a str) -> Self {
+    pub fn new(username: String, sprite: String) -> Self {
         Player {
             username,
             sprite,
@@ -49,8 +49,8 @@ impl<'a> Player<'a> {
     /// # Examples
     ///
     /// ``` 
-    /// use crate::game_lib::game::GameBoard;
-    /// use crate::game_lib::game::GameStatus;
+    /// use super::game::GameBoard;
+    /// use super::game::GameStatus;
     ///
     /// let mut test_player_1 = Player::new("User 1", "X");
     /// let mut test_player_2 = Player::new("User 2", "O");
@@ -85,8 +85,8 @@ impl<'a> Player<'a> {
     /// # Examples
     ///
     /// ``` 
-    /// use crate::game_lib::game::GameBoard;
-    /// use crate::game_lib::game::GameStatus;
+    /// use super::game::GameBoard;
+    /// use super::game::GameStatus;
     ///
     /// let mut test_player_1 = Player::new("User 1", "X");
     /// let mut test_player_2 = Player::new("User 2", "O");
@@ -124,7 +124,7 @@ impl<'a> Player<'a> {
     ///
     /// # Arguments
     ///
-    /// * `updated_username` - A string slice that holds the new username
+    /// * `updated_username` - A string that holds the new username
     ///
     /// # Examples
     ///
@@ -133,7 +133,7 @@ impl<'a> Player<'a> {
     ///
     /// println!("{test_player}");
     ///
-    /// test_player.update_username("New Username");
+    /// test_player.change_username("New Username");
     ///
     /// println!("{test_player}");
     /// ```
@@ -142,9 +142,30 @@ impl<'a> Player<'a> {
 
         self.username = updated_username
     }
+
+    /// Edits the sprite of the player
+    ///
+    /// # Arguments
+    ///
+    /// * `updated_sprite` - A string that holds the new sprite
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut test_player = Player::new("User 1", "X");
+    ///
+    /// println!("{test_player}");
+    ///
+    /// test_player.change_sprite("O");
+    ///
+    /// println!("{test_player}");
+    /// ```
+    pub fn change_sprite(&mut self, updated_sprite: String) {
+        self.sprite = updated_sprite
+    }
 }
 
-impl<'b> fmt::Display for Player<'b> {
+impl fmt::Display for Player {
     // just print out the players name
     fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
         write!(format_buffer, "{username}: {wins} win(s)", 

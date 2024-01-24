@@ -1,7 +1,7 @@
 use std::fmt;
 use std::mem;
 use colored::Colorize;
-use crate::game_lib::players::Player;
+use super::Player;
 
 /// An enumerator that represents whether a players move was
 /// valid or not
@@ -16,7 +16,7 @@ enum MoveStatus<'a> {
 /// An enumerator that represents the rules of the current game
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum GameRule {
+pub enum GameMode {
     /// `TicTacToe` -  User selection follows Tic-Tac-Toe Rules
     TicTacToe,
     /// `ConnectFour` - User selection follows Connect-4 Rules
@@ -31,7 +31,7 @@ pub enum GameRule {
 #[derive(PartialEq)]
 pub enum GameStatus<'a> {
     /// `Won` - When the game is won, the player who won can be printed out
-    Won(&'a Player<'a>),
+    Won(&'a Player),
     /// `Tie` - Used when the game has been tied
     Tie,
     /// `Continue` - Used when the game can continue being played
@@ -51,13 +51,13 @@ pub struct GameBoard<'a> {
     /// `grid` - A vec `grid_size` * `grid_size` vec filled with empty string literals    
     grid: Vec<&'a str>,
     /// `player_1` - A reference to a player struct meant for one of the players
-    pub current_player: &'a Player<'a>,
+    pub current_player: &'a Player,
     /// `player_2` - A reference to a player struct meant for one of the players
-    other_player: &'a Player<'a>,
+    other_player: &'a Player,
     /// `game_status` - A GameStatus enum that keeps track of game progress
     pub game_status: GameStatus<'a>,
     /// `game_rule` - An enum that tracks which rules the game currently follows
-    game_rule: &'a GameRule,
+    game_mode: &'a GameMode,
 }
 
 /// Game methods and functions
@@ -68,7 +68,7 @@ impl<'a> GameBoard<'a> {
     ///
     /// * `game_name` - A string slice that holds the name of the game being played
     /// * `board_size` - An integer that's used to make a N * N grid
-    /// * `game_rule` - A GameRule Enum that allows players to change the behavior of player placement
+    /// * `game_mode` - A reference to GameMode Enum that allows players to change the behavior of player placement
     /// * `player_1` - A reference to a player
     /// * `player_2` - A reference to a player
     ///
@@ -77,18 +77,18 @@ impl<'a> GameBoard<'a> {
     /// Basic Usage:
     ///
     /// ```
-    /// use crate::game_lib::players::Player;
+    /// use super::players::Player;
     ///
     /// let player_1 = Player::new("User 1", "X");
     /// let player_2 = Player::new("User 2", "O");
-    /// let test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
+    /// let test_game = GameBoard::new("Test Game", 3, &GameMode::TicTacToe, &player_1, &player_2);
     ///
     /// println!("{test_game}");
     /// ```
     pub fn new(
         game_name: &'a str, 
         board_size: usize,
-        game_rule: &'a GameRule, 
+        game_mode: &'a GameMode, 
         player_1: &'a Player, 
         player_2: &'a Player,
     ) -> GameBoard<'a> {
@@ -100,7 +100,7 @@ impl<'a> GameBoard<'a> {
             current_player: player_1,
             other_player: player_2,
             game_status: GameStatus::Continue,
-            game_rule,
+            game_mode,
         }
     }
 
@@ -121,11 +121,11 @@ impl<'a> GameBoard<'a> {
     /// # Examples
     ///
     /// ```
-    /// use crate::game_lib::players::Player;
+    /// use super::players::Player;
     ///
     /// let player_1 = Player::new("User 1", "X");
     /// let player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, &GameMode::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.player_move(1);
     ///
@@ -141,8 +141,8 @@ impl<'a> GameBoard<'a> {
         match self.valid_move(selected_cell) {
             MoveStatus::Valid => {
                 // adjust logic based on board size
-                match self.game_rule {
-                    GameRule::ConnectFour => { 
+                match self.game_mode {
+                    GameMode::ConnectFour => { 
                         // connect-4 specific rules
                         let mut cell_below = selected_cell + (self.grid_size - 1);
 
@@ -157,14 +157,14 @@ impl<'a> GameBoard<'a> {
                             cell_below -= self.grid_size;
                         }
 
-                        self.grid[cell_below] = self.current_player.sprite;
+                        self.grid[cell_below] = &self.current_player.sprite;
                         self.num_of_turns += 1;
                     }
-                    GameRule::TicTacToe => {
-                        self.grid[selected_cell - 1] = self.current_player.sprite;
+                    GameMode::TicTacToe => {
+                        self.grid[selected_cell - 1] = &self.current_player.sprite;
                         self.num_of_turns += 1;
                     }
-                    GameRule::Invalid => panic!("Something went wrong with game rule selection"),
+                    GameMode::Invalid => panic!("Something went wrong with game mode selection"),
                 }
 
                 // check to see if its worth checking if someone could win
@@ -209,11 +209,11 @@ impl<'a> GameBoard<'a> {
     /// # Examples
     ///
     /// ```
-    /// use crate::game_lib::players::Player;
+    /// use super::players::Player;
     ///
     /// let mut player_1 = Player::new("User 1", "X");
     /// let mut player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, &GameMode::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.play_move(3); // autmatically calls the switch_player function
     /// test_game.play_move(1); // autmatically calls the switch_player function
@@ -238,11 +238,11 @@ impl<'a> GameBoard<'a> {
     /// # Examples
     ///
     /// ```
-    /// use crate::game_lib::players::Player;
+    /// use super::players::Player;
     ///
     /// let mut player_1 = Player::new("User 1", "X");
     /// let mut player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, &GameMode::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.play_move(1);
     /// test_game.play_move(4);
@@ -372,11 +372,11 @@ impl<'a> GameBoard<'a> {
     /// # Examples
     ///
     /// ```
-    /// use crate::game_lib::players::Player;
+    /// use super::players::Player;
     ///
     /// let mut player_1 = Player::new("User 1", "X");
     /// let mut player_2 = Player::new("User 2", "O");
-    /// let mut test_game = GameBoard::new("Test Game", 3, GameRule::TicTacToe, &player_1, &player_2);
+    /// let mut test_game = GameBoard::new("Test Game", 3, &GameMode::TicTacToe, &player_1, &player_2);
     ///
     /// test_game.play_move(1);
     /// test_game.play_move(4);
@@ -399,7 +399,7 @@ impl<'a> GameBoard<'a> {
         }
 
         // connect-4 only rule
-        if selected_cell > self.grid_size && *self.game_rule == GameRule::ConnectFour {
+        if selected_cell > self.grid_size && *self.game_mode == GameMode::ConnectFour {
             return MoveStatus::Invalid("Invalid column selected")
         }
 
@@ -408,7 +408,7 @@ impl<'a> GameBoard<'a> {
 }
 
 // the formatter trait for the game struct
-impl<'a> fmt::Display for GameBoard <'a> {
+impl<'a> fmt::Display for GameBoard<'a> {
     fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
         write!(format_buffer, " ")?;
 
@@ -431,7 +431,7 @@ impl<'a> fmt::Display for GameBoard <'a> {
 
             // check to see if we are at the
             // end of the row
-            if  (index + 1) % self.grid_size  == 0 {
+            if  (index + 1) % self.grid_size == 0 {
                 write!(format_buffer, "\n ")?;
 
                 // format the line breaks between

@@ -2,25 +2,34 @@ mod game_lib;
 
 use game_lib::game::GameBoard;
 use game_lib::game::GameStatus;
-use game_lib::game::GameRule;
+use game_lib::game::GameMode;
 use game_lib::players::Player;
+use game_lib::game_input::*;
+use game_lib::general_input::*;
+use game_lib::PlayerList;
 use colored::Colorize;
-use std::io;
 
 const SOFTWARE_NAME: &str = env!("CARGO_PKG_NAME");
 const SOFTWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const INPUT_QUESTION_1: &str = 
-    "Which game do you want to play? Tic-Tac-Toe or Connect-4? Enter a `1`, `2`, `3` to get an 'N' sized board, or `4` to get new player names, or `0` to exit: ";
+    "Which game do you want to play? Tic-Tac-Toe or Connect-4? \
+    Enter a `1`, `2`, `3` to get an 'N' sized board, `4` to get new player names, `5` to change player sprite, or `0` to exit: ";
 const INPUT_QUESTION_2: &str = 
     "Would you like to play again? Enter a `Y` or `N`: ";
 const INPUT_QUESTION_3: &str = 
     "What sized board do you want to play on?  ";
 const INPUT_QUESTION_4: &str = 
-    "What game rules would you like to play with? `1` for Tic-Tac-Toe or `2` for Connect-4. ";
+    "What game mode would you like to play? `1` for Tic-Tac-Toe or `2` for Connect-4. ";
+const INPUT_QUESTION_5: &str = 
+    "Which player do you want to edit? `1`, `2`, or `0` to exit to main menu: ";
 const PLAYER_1_INPUT: &str = 
     "Please input player 1 name: ";
 const PLAYER_2_INPUT: &str = 
     "Please input player 2 name: ";
+const PLAYER_NAME_INPUT: &str = 
+    "Please input player name: ";
+const PLAYER_INPUT: &str = 
+    "Please input player sprite: ";
 
 // test application
 fn main() {
@@ -33,30 +42,32 @@ fn main() {
     println!();
 
     let mut user_input = get_int_input(INPUT_QUESTION_1);
-    let mut player_1 = Player::new("".to_string(), "X");
-    let mut player_2 = Player::new("".to_string(), "O");
+    let mut player_list = PlayerList {
+        player_1: Player::new("".to_string(), "X".to_string()), 
+        player_2: Player::new("".to_string(), "O".to_string()),
+    };
 
-    while user_input  != 0 {
+    while !(matches!(user_input, 0)) {
         match user_input {
             1 => {
-                player_1 = check_player_name(player_1);
-                player_2 = check_player_name(player_2);
+                player_list.player_1 = check_player_name(player_list.player_1, PLAYER_1_INPUT);
+                player_list.player_2 = check_player_name(player_list.player_2, PLAYER_2_INPUT);
 
-                play_game(&mut player_1, &mut player_2, "Tic-Tac-Toe", 3, &GameRule::TicTacToe);
+                play_game(&mut player_list.player_1, &mut player_list.player_2, "Tic-Tac-Toe", 3, &GameMode::TicTacToe);
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
             2 => {
-                player_1 = check_player_name(player_1);
-                player_2 = check_player_name(player_2);
+                player_list.player_1 = check_player_name(player_list.player_1, PLAYER_1_INPUT);
+                player_list.player_2 = check_player_name(player_list.player_2, PLAYER_2_INPUT);
 
-                play_game(&mut player_1, &mut player_2, "Connect-4", 4, &GameRule::ConnectFour);
+                play_game(&mut player_list.player_1, &mut player_list.player_2, "Connect-4", 4, &GameMode::ConnectFour);
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
             3 => {
-                player_1 = check_player_name(player_1);
-                player_2 = check_player_name(player_2);
+                player_list.player_1 = check_player_name(player_list.player_1, PLAYER_1_INPUT);
+                player_list.player_2 = check_player_name(player_list.player_2, PLAYER_2_INPUT);
 
                 println!();
 
@@ -64,26 +75,41 @@ fn main() {
 
                 println!();
 
-                let mut game_rule = get_rule_input(INPUT_QUESTION_4);
-
-                while matches!(game_rule, GameRule::Invalid) {
-                    eprintln!("{error_mssg}", error_mssg = "You selected an invalid game rule. Please try again.".bold().red());
-
-                    game_rule = get_rule_input(INPUT_QUESTION_4);
-                }
+                let game_rule = get_mode_input(INPUT_QUESTION_4);
                 
-                play_game(&mut player_1, &mut player_2, "Tic-Tac-Toe Augmented", board_size, &game_rule);
+                play_game(&mut player_list.player_1, &mut player_list.player_2, "Tic-Tac-Toe Augmented", board_size, &game_rule);
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
             4 => {
-                let player_1_name = get_str_input(PLAYER_1_INPUT, 3);
-                let player_2_name = get_str_input(PLAYER_2_INPUT, 3);
+                println!();
 
-                player_1.change_username(player_1_name);
-                player_2.change_username(player_2_name);
+                match select_player(INPUT_QUESTION_5, &mut player_list) {
+                    Some(player) => {
+                        player.change_username(get_str_input(PLAYER_NAME_INPUT, 3));
 
-                eprintln!("\n{message}\n", message = "Success in changing the players name".green().bold());
+                        eprintln!("{mssg}", mssg = "Changing player name was successful.".green().bold());
+                    }
+                    None => eprintln!("{mssg}", mssg = "Exiting to main menu...".bold()),
+                }
+
+                println!();
+
+                user_input = get_int_input(INPUT_QUESTION_1);
+            }
+            5 => {
+                println!();
+
+                match select_player(INPUT_QUESTION_5, &mut player_list) {
+                    Some(player) => {
+                        player.change_sprite(get_str_input(PLAYER_INPUT, 1));
+
+                        eprintln!("{mssg}", mssg = "Changing player sprite was successful.".green().bold());
+                    }
+                    None => eprintln!("{mssg}", mssg = "Exiting to main menu...".bold()),
+                }
+
+                println!();
 
                 user_input = get_int_input(INPUT_QUESTION_1);
             }
@@ -101,25 +127,25 @@ fn play_game(
     player_2: &mut Player, 
     game_name: & str, 
     grid_size: usize,
-    game_rule: &GameRule,
+    game_mode: &GameMode,
 ) {
     println!("\nYou selected {game_name}", game_name = game_name.bold());
 
     let mut another_round = String::from("Y"); // assume they want to play once
 
     while matches!(another_round.as_str(), "Y") {
-        let mut game = GameBoard::new(game_name, grid_size, game_rule, player_1, player_2); // creates a new board
+        let mut game = GameBoard::new(game_name, grid_size, game_mode, player_1, player_2); // creates a new board
 
         println!("\nWelcome to {game_name}", game_name = game.name);
 
-        while game.game_status == GameStatus::Continue {
+        while matches!(game.game_status, GameStatus::Continue) {
             eprint!("\n{game}");
             println!("\nCurrent Player: {name}", name = game.current_player.username);
 
             // debug
             //println!("Testing Logic: {:?}", game.game_status);
 
-            let selected_cell: usize = if *game_rule == GameRule::ConnectFour {
+            let selected_cell: usize = if *game_mode == GameMode::ConnectFour {
                     get_int_input("Select a column: ")
                 } else {
                     get_int_input("Select an open cell: ")
@@ -163,81 +189,4 @@ fn play_game(
         
         println!();
     }
-}
-
-fn check_player_name(mut player : Player) -> Player {
-    if matches!(player.username.as_str(), "") {
-        let player_name = get_str_input(PLAYER_1_INPUT, 3);
-
-        player.change_username(player_name);
-    }
-
-    player
-}
-
-fn get_rule_input(message: &str) -> GameRule {
-    match  get_int_input(message) {
-        1 => GameRule::TicTacToe,
-        2 => GameRule::ConnectFour,
-        _ => GameRule::Invalid,
-    }
-}
-
-fn get_str_input(message: &str, max_character_input: usize) -> String {
-    let mut user_input = String::new();
-
-    // debug
-    //println!("Testing new to me methods: {}", user_input.trim().chars().count());
-
-    while user_input.trim().chars().count() != max_character_input {
-        eprint!("\n{message}");
-
-        io::stdin()
-            .read_line(& mut user_input)
-            .expect("There was an issue getting your name");
-
-        if user_input.trim().chars().count() < max_character_input || user_input.trim().chars().count() > max_character_input {
-            eprint!("{first_part} {max_character_input} {last_part}", 
-                first_part = "Error: You need to enter".red().bold(), 
-                max_character_input = max_character_input.to_string().trim().red().bold(),
-                last_part = "character(s)\n".red().bold());
-
-            // debug
-            //eprintln!("Testing new to me methods: {}", user_input.trim().chars().count());
-
-            user_input.clear() // try again
-        }
-    }
-
-    // debug
-    //println!("Testing new to me methods: {}", user_input.trim().chars().count());
-
-    user_input.trim().to_string().to_uppercase()
-}
-
-fn get_int_input(message: &str) -> usize {
-    eprint!("{message}");
-
-    let mut user_input = String::new();
-
-    io::stdin()
-        .read_line(&mut user_input)
-        .expect("There was an issue getting user input.");
-
-    let mut user_int = user_input.trim().parse::<usize>();
-
-    while user_int.is_err() {
-        eprintln!("{error}", error = "There was an error getting your input. Try again".bold().red());
-        eprint!("{message}");
-
-        io::stdin()
-            .read_line(&mut user_input)
-            .expect("There was an issue getting user input.");
-
-        user_int = user_input.trim().parse::<usize>();
-    }
-
-    user_int.unwrap_or_else(|err| {
-        panic!("Something went really wrong. \nThe following is the error message: {err}");
-    })
 }

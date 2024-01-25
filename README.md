@@ -24,6 +24,7 @@ way to learn Rust before I go on to do anything more complicated.
 ## Bug Tracking ##
 
 ### Known Bugs ###
+* When the last move should be a winning move, the game will report a tie
 
 
 ### Fixed Bugs ###

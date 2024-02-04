@@ -24,14 +24,13 @@ way to learn Rust before I go on to do anything more complicated.
 ## Bug Tracking ##
 
 ### Known Bugs ###
-* When the last move should be a winning move, the game will report a tie
 
 
 ### Fixed Bugs ###
 * Move logic for Connect-4 is not accurate to what it is in the real world
 * When asking to start a new round, anything that isn't 'N' can cause it to restart.
 * When starting a new round, after getting a new player name the wins are persistent
+* When the last move should be a winning move, the game will report a tie
 
 
 ## Dependencies ##
-* Rust "Colored" Crate - [Link](https://github.com/colored-rs/colored/tree/master?tab=readme-ov-file)

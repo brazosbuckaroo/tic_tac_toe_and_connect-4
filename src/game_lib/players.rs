@@ -1,175 +1,315 @@
 use std::fmt;
-use colored::Colorize;
 
-/// Represents a Player a name. sprite (something to repsents a player),
-/// and keeps track of how many times the player won
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub struct Player {
-    /// `username` - A string literal to represent the name of the player
-    pub username: String, 
-    /// `sprite` - A string literal used to represent the player on grid
-    pub sprite: String,
-    /// `total_wins` - An arch-sized unsigned integer used to keep track of player wins
-    pub total_wins: usize,
+/// A List struct to contain two different players
+#[derive(Debug, PartialEq, Clone)]
+pub struct List {
+    /// `player_1` - \
+    ///  A Player struct used to represent player 1
+    pub player_1: Player,
+    /// `player_2` - \
+    ///  A Player struct used to represent player 2
+    pub player_2: Player,
 }
 
-/// Player methods and functions
+// helps format the output of the list
+impl fmt::Display for List {
+    fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
+        write!(format_buffer, "{player_1} | {player_2} ", 
+            player_1 = self.player_1, player_2 = self.player_2)
+    }
+}
+
+/// Represents a Player with a name. sprite (something to repsents a player),
+/// and keeps track of how many times the player won
+#[derive(Debug, PartialEq, Clone)]
+pub struct Player {
+    /// `control` - \
+    ///  A field meant to store how the player is controlled, whether it be by AI or a Human
+    pub control: ControlMode, 
+    /// `name` - \
+    ///  A string to represent the name of the player
+    pub name: String, 
+    /// `sprite` - \
+    ///   A Sprite struct meant to represent the player on the board
+    pub sprite: Sprite,
+    /// `wins` - \
+    ///  An arch-sized unsigned integer used to keep track of player wins
+    pub wins: usize,
+}
+
 impl Player {
-    /// Returns a player with the name given them and a symbol used to 
-    /// represent them on the game board. Players are also able to track 
-    /// the amount of wins they have
+    /// This function is used to allow forthe creation of a player with no defaults.
     ///
     /// # Arguments
+    /// 
+    /// * `control` - \
+    ///    A `ControlMode` enumerator meant to show how the player is controlled
+    /// * `name` - \
+    ///    A String meant to label the player
+    /// * `sprite` - \
+    ///    A Sprite used as a way to represent the player on the board
     ///
-    /// * `username` - A string slice that holds the name of the person
-    /// * `user_sprite` -  A string literal used to represent the player on the board
+    /// # Returns
+    ///
+    /// * `Player` -  \
+    ///    A player struct constructed witht the arguments passed by the caller
     ///
     /// # Examples
     ///
-    /// ```
-    /// let test_player = Player::new("User 1", "X");
+    /// Basic Usage:
     ///
-    /// println!("Test Player: \n {test_player}");
     /// ```
-    pub fn new(username: String, sprite: String) -> Self {
+    /// let player = Player::new(ControlMode::Human, String::from("Hughman"), Sprite::new("X"));
+    ///
+    /// println!("{player}");
+    /// ```
+    pub fn new(control: ControlMode, name: String, sprite: Sprite) -> Player {
         Player {
-            username,
+            control,
+            name,
             sprite,
-            total_wins: 0,
+            wins: 0,
         }
     }
 
-    /// Takes an unsigned integer to update a players score by a specified integer.
+    /// This function alllows for a convienent way to make a Human controlled player.
     ///
     /// # Arguments
+    /// 
+    /// * `name` - \
+    ///    A String meant to label the player
+    /// * `sprite` - \
+    ///    A Sprite used as a way to represent the player on the board
     ///
-    /// * `update_scale` - A unsigned integer used to update a player's score
+    /// # Returns
+    ///
+    /// * `Player` - \
+    ///     A player struct constructed witht the arguments passed by the caller
     ///
     /// # Examples
     ///
-    /// ``` 
-    /// use super::game::GameBoard;
-    /// use super::game::GameStatus;
+    /// Basic Usage:
     ///
-    /// let mut test_player_1 = Player::new("User 1", "X");
-    /// let mut test_player_2 = Player::new("User 2", "O");
-    /// let mut test_board = Gameboard::new("Test Game", 3, GameRule::TicTacToe, &test_player_1, &test_player_2);
+    /// ```
+    /// let player = Player::human(String::from("Hughman"), Sprite("X"));
     ///
-    /// test_board.play_move(1);
-    /// test_board.play_move(4);
-    /// test_board.play_move(2);
-    /// test_board.play_move(9);
-    /// test_board.play_move(3);
+    /// println!("{player}");
+    /// ```
+    #[must_use]
+    pub fn human(name: String, sprite: Sprite) -> Player {
+        Player {
+            control: ControlMode::Human,
+            name,
+            sprite,
+            wins: 0,
+        }
+    }
+
+    /// This function alllows for a convienent way to make an Ai controlled player.
     ///
-    /// match test_board.game_status {
-    ///     GameStatus::Win(player) => {
-    ///             if player.sprite == test_player_1.sprite {
-    ///                 println!("{player} won!", player = test_player_1.username);   
-    ///                 test_player_1.update_wins(1);
-    ///             } else {
-    ///                 println!("{player} won!", player = test_player_2.username); 
-    ///                 test_player_2.update_wins(1);  
-    ///             }
-    ///         }
-    ///     GameStatus::Tie => (),
-    ///     GameStatus::Continue => (),
-    ///     }
+    /// # Arguments
+    /// 
+    /// * `name` - \
+    ///    A String meant to label the player
+    /// * `sprite` - \
+    ///    A Sprite used as a way to represent the player on the board
+    ///
+    /// # Returns
+    ///
+    /// * `Player` - \
+    ///    A player struct constructed witht the arguments passed by the caller
+    ///
+    /// # Examples
+    ///
+    /// Basic Usage:
+    ///
+    /// ```
+    /// let player = Player::Ai(String::from("Hal"), Sprite::new("O"));
+    ///
+    /// println!("{player}");
+    /// ```
+    #[must_use]
+    pub fn ai(sprite: Sprite) -> Player {
+        Player {
+            control: ControlMode::Ai,
+            name: String::from("HAL"),
+            sprite,
+            wins: 0,
+        }
+    }
+
+    /// This function allows the caller toupdate a players wins
+    ///
+    /// # Arguments
+    /// 
+    /// * `self` - \
+    ///    A mutable reference to a Player struct
+    ///
+    /// # Examples
+    ///
+    /// Basic Usage:
+    ///
+    /// ```
+    /// let mut player = Player::Ai(String::from("Hal"), Sprite::new("O"));
+    ///
+    /// player.update_wins(1);
+    ///
+    /// println!("{player}");
     /// ```
     pub fn update_wins(&mut self, update_scale: usize) {
-        self.total_wins += update_scale;
+        self.wins += update_scale;
     }
 
-    /// Resets the players wins to zero.
-    ///
-    /// # Examples
-    ///
-    /// ``` 
-    /// use super::game::GameBoard;
-    /// use super::game::GameStatus;
-    ///
-    /// let mut test_player_1 = Player::new("User 1", "X");
-    /// let mut test_player_2 = Player::new("User 2", "O");
-    /// let mut test_board = Gameboard::new("Test Game", 3, GameRule::TicTacToe, &test_player_1, &test_player_2);
-    ///
-    /// test_board.play_move(1);
-    /// test_board.play_move(4);
-    /// test_board.play_move(2);
-    /// test_board.play_move(9);
-    /// test_board.play_move(3);
-    ///
-    /// match test_board.game_status {
-    ///     GameStatus::Win(player) => {
-    ///             if player.sprite == test_player_1.sprite {
-    ///                 println!("{player} won!", player = test_player_1.username);   
-    ///                 test_player_1.update_wins(1);
-    ///             } else {
-    ///                 println!("{player} won!", player = test_player_2.username); 
-    ///                 test_player_2.update_wins(1);  
-    ///             }
-    ///         }
-    ///     GameStatus::Tie => (),
-    ///     GameStatus::Continue => (),
-    ///     }
-    ///
-    /// test_player_1.clear_wins();
-    ///
-    /// println!("test_player_1");
-    /// ```
-    fn clear_wins(&mut self) {
-        self.total_wins = 0;
-    }
-
-    /// Edits the username of the player
+    /// This function allows the caller toupdate a players wins
     ///
     /// # Arguments
-    ///
-    /// * `updated_username` - A string that holds the new username
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let mut test_player = Player::new("User 1", "X");
-    ///
-    /// println!("{test_player}");
-    ///
-    /// test_player.change_username("New Username");
-    ///
-    /// println!("{test_player}");
-    /// ```
-    pub fn change_username(&mut self, updated_username: String) {
-        self.clear_wins();
-
-        self.username = updated_username
-    }
-
-    /// Edits the sprite of the player
-    ///
-    /// # Arguments
-    ///
-    /// * `updated_sprite` - A string that holds the new sprite
+    /// 
+    /// * `self` - \
+    ///    A mutable reference to a Player struct
     ///
     /// # Examples
     ///
+    /// Basic Usage:
+    ///
     /// ```
-    /// let mut test_player = Player::new("User 1", "X");
+    /// let mut player = Player::Ai(String::from("Hal"), Sprite::new("O"));
     ///
-    /// println!("{test_player}");
+    /// player.update_wins(1);
     ///
-    /// test_player.change_sprite("O");
+    /// println!("{player}");
     ///
-    /// println!("{test_player}");
+    /// let mut player = player;
+    ///
+    /// player.reset();
+    ///
+    /// println!("{player}");
     /// ```
-    pub fn change_sprite(&mut self, updated_sprite: String) {
-        self.sprite = updated_sprite
+    pub fn reset(&mut self) {
+        self.wins = 0;
     }
 }
 
 impl fmt::Display for Player {
-    // just print out the players name
     fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
-        write!(format_buffer, "{username}: {wins} win(s)", 
-            username = self.username.bold(), 
-            wins =self.total_wins.to_string().italic().bold())
+        write!(format_buffer, "{name}: {wins} wins", name = self.name, wins = self.wins)
+    }
+}
+
+/// An enum used to present the two types of players available
+/// `Human` and `Ai`
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum ControlMode {
+    /// `Human` - \
+    ///  Represents a Human Player
+    Human,
+    /// `Ai` - \
+    ///  Represents a Ai player
+    Ai,
+}
+
+/// This tuple struct is used as a way to represent the player and give them the ability to 
+/// change their sprite, if they so wish. For now, it is jsut wrapping a String but eventually it would be
+/// a JPEG or some other image
+#[derive(Debug, PartialEq, Clone)]
+pub struct Sprite(pub String);
+
+impl Sprite {
+    /// This function allows the creation of a sprite with a simple string literal.
+    ///
+    /// # Arguments
+    ///
+    /// * `new_sprite` - A string literal used as a way to set the player's sprite
+    ///
+    /// # Returns
+    ///
+    /// * `Sprite` - \
+    ///    A tuple struct containing the character(s) that represent the player
+    ///
+    /// # Examples
+    ///
+    /// Basic Usage:
+    ///
+    /// ```
+    /// let sprite = Sprite::new("7UP");
+    ///
+    /// println!("{sprite}");
+    /// ```
+    pub fn new(new_sprite: &str) -> Sprite {
+        Sprite(new_sprite.to_owned().to_string())
+    }
+}
+
+    /// This function allows the creation of a empty sprite. Mostly for the sake of ease when filling an 
+    /// empty board before a player makes a move
+    ///
+    /// # Returns
+    ///
+    /// * `Sprite` - An empty Sprite
+    ///
+    /// # Examples
+    ///
+    /// Basic Usage:
+    ///
+    /// ```
+    /// let sprite = Sprite::default();
+    ///
+    /// println!("{sprite}"); // should be nothing
+    /// ```
+impl Default for Sprite {
+    fn default() -> Sprite {
+        Sprite(String::from(" "))
+    }
+}
+
+impl fmt::Display for Sprite {
+    fn fmt(&self, format_buffer: &mut fmt::Formatter) -> fmt::Result {
+        write!(format_buffer, "{sprite}", sprite = self.0)
+    }
+}
+
+/// This modules contines all the logic related to how ai function in the engine.
+/// There is a very basic dumb `Ai` implemented until actual algorithms can be
+/// implemented.
+pub mod ai_engine {
+    use super::Sprite;
+
+    /// A funtion that, when called, is used by the ai engine to get valid moves
+    ///
+    /// # Arguments
+    /// 
+    /// * `game` - \
+    ///    A game struct used as a way to anaylze the current state of the board
+    ///    to make a valid moves list
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<usize>` - \
+    ///     A vector of unsigned integers that represent the moves an Ai can do 
+    ///                  
+    /// # Examples
+    /// 
+    /// Basic Usage:
+    ///
+    /// ```
+    /// use::super::Game;
+    /// use::super::Sprite;
+    ///
+    /// let game = Game::tic_tac_toe();
+    /// let valid_moves = create_valid_moves(game);
+    ///
+    /// for (_, move) in valid_moves.iter().enumerte() {
+    ///     eprintln!("These are the valid moves: {move}");   
+    /// }
+    /// ```
+    pub fn create_valid_moves(board: &[Sprite]) -> Vec<usize> {
+        let mut valid_moves = Vec::new();
+
+        for (index, cell) in board.iter().enumerate() {
+            if cell == &Sprite::default() {
+                valid_moves.push(index);
+            }
+        }
+
+        valid_moves
     }
 }

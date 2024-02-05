@@ -1,7 +1,6 @@
 # Tic-Tac-Toe and Connect-4 #
 
-A simple game engine to make a Tic-Tac-Toe or Connect-4 game. This is mostly being used as a 
-way to learn Rust before I go on to do anything more complicated.
+A simple game engine to make a Tic-Tac-Toe or Connect-4 game. This is mostly being used as a way to learn Rust before I go on to do anything more complicated.
 
 
 ## Features ##
@@ -15,6 +14,7 @@ way to learn Rust before I go on to do anything more complicated.
 * Allow user to play on a user selected sized grid
 * Allow users to select which player to change the name of and reset wins
 * Allow users to change what their sprite is between rounds
+* Added a very simple ai that just randomly picks a number from a valid moves list
 
 
 ### Planned Features ###

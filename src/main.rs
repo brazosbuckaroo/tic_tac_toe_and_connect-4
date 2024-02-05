@@ -6,6 +6,7 @@ use std::mem;
 use game_lib::{MAIN_MENU, WHICH_PLAYER, GAME_EDITOR, PLAY_AGAIN};
 use game_lib::general_input::{get_int_input, get_str_input};
 use game_lib::player::{List, Player, ControlMode, Sprite};
+use game_lib::player::ai_engine::simple_think;
 use game_lib::player_editor::player_editor;
 use game_lib::game::{Game, State, MoveStatus};
 use game_lib::game_editor::game_editor;
@@ -22,23 +23,23 @@ fn main() {
     let mut user_input = get_int_input(MAIN_MENU);
     let mut player_list = List {
         player_1: Player::human(String::from("P1"), Sprite::new("X")),
-        player_2: Player::human(String::from("P2"), Sprite::new("O")),
+        player_2: Player::ai(Sprite::new("H")),
     };
     let mut game = Game::tic_tac_toe();
  
-    while !(matches!(user_input, 0)) {
+    while user_input.is_some() {
         match user_input {
-            1 => {
+            Some(1) => {
                 player_list = player_editor(WHICH_PLAYER, player_list.clone());              
 
                 user_input = get_int_input(MAIN_MENU);
             }
-            2 => {
+            Some(2) => {
                 game = game_editor(GAME_EDITOR, game.clone());
 
                 user_input = get_int_input(MAIN_MENU);
             }
-            3 => {
+            Some(3) => {
                 let mut play_again = String::from("Y");
 
                 while matches!(play_again.as_str(), "Y") {
@@ -53,8 +54,16 @@ fn main() {
                             current_player = current_player.name);
 
                         let player_move = match &current_player.control {
-                            ControlMode::Human => get_int_input("Make a move: "),
-                            ControlMode::Ai => get_int_input("Make a move: "),
+                            ControlMode::Human => {
+                                    if let Some(val) = get_int_input("Make a move: ") {
+                                        val
+                                    } else {
+                                        eprintln!("Exiting game...");
+
+                                        break;
+                                    }
+                                }
+                            ControlMode::Ai => simple_think(&game.board, game.size, game.current_mode),
                         };
                     
                         match ttt_cnct_four_board_move_chck(

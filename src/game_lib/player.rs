@@ -1,4 +1,5 @@
 use std::fmt;
+use super::game::Mode;
 
 /// A List struct to contain two different players
 #[derive(Debug, PartialEq, Clone)]
@@ -271,7 +272,9 @@ impl fmt::Display for Sprite {
 /// There is a very basic dumb `Ai` implemented until actual algorithms can be
 /// implemented.
 pub mod ai_engine {
+    use rand::prelude::*;
     use super::Sprite;
+    use super::Mode;
 
     /// A funtion that, when called, is used by the ai engine to get valid moves
     ///
@@ -301,15 +304,84 @@ pub mod ai_engine {
     ///     eprintln!("These are the valid moves: {move}");   
     /// }
     /// ```
-    pub fn create_valid_moves(board: &[Sprite]) -> Vec<usize> {
+    fn ttt_valid_moves(board: &[Sprite]) -> Vec<usize> {
         let mut valid_moves = Vec::new();
 
         for (index, cell) in board.iter().enumerate() {
             if cell == &Sprite::default() {
-                valid_moves.push(index);
+                valid_moves.push(index + 1);
             }
         }
 
         valid_moves
+    }
+
+    /// A very simple function that adds very, very basic `Ai` that can pick a random space based on
+    /// a generated move list
+    ///
+    /// # Arguments
+    ///
+    /// * `board` - \
+    ///     A reference to the board
+    /// * `size` - \
+    ///     An unsigned integer used to give the rng a range
+    /// * `mode` - \
+    ///     Adjust the algorithm according to the mode
+    ///
+    /// # Returns
+    ///
+    ///  * `usize` - \
+    ///      An arch sized unsigned integer meant as the move
+    ///
+    /// # Examples
+    ///
+    /// Basic Usage:
+    ///
+    /// ```
+    /// use super::Mode;
+    ///
+    /// let mut game = Game::tictactoe();
+    /// let player_1 = Player::human(String::from("P1"), Sprite::new("X"));
+    /// let player_2 = Player::ai(Sprite::new("H"));
+    ///
+    /// game.board = edit_board(
+    ///     game.board, 
+    ///     game.size, 
+    ///     game.mode, 
+    ///     &player_1.sprite, 
+    ///     &player_2.sprite, 
+    ///     1,
+    /// );
+    /// let ai_selection = simple_think(&game.board, board.size. game.mode);
+    /// game.board = edit_board(
+    ///     game.board, 
+    ///     game.size, 
+    ///     game.mode, 
+    ///     &player_1.sprite, 
+    ///     &player_2.sprite, 
+    ///     ai_selection,
+    /// );
+    ///
+    /// println!("{game}");
+    /// ```
+    pub fn simple_think(board: &[Sprite], size: usize, mode: Mode) -> usize {
+        let mut rng = rand::thread_rng();
+        let mut ai_pick: usize = 0;
+
+        match mode {
+            Mode::TicTacToe => {
+                let valid_moves = ttt_valid_moves(board);
+                ai_pick = *valid_moves.iter().choose(&mut rng).unwrap_or_else(| | {
+                    panic!("There was an issue in the simple_think function")
+                });
+            }
+            Mode::ConnectFour => {
+                ai_pick = rng.gen_range(1..=size);
+            }
+            Mode::Chess => (),
+            Mode::Checkers => (),
+        }
+                
+        ai_pick
     }
 }

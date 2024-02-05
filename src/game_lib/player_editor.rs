@@ -1,6 +1,6 @@
-use super::general_input::{get_int_input, get_str_input};
+use super::cmdln_interface::{get_int_input, get_str_input};
 use super::player::{List, Player, ControlMode, Sprite};
-use super::{TO_MAIN, ESCAPE_CHAR, PLAYER_ATTRIBUTE_MENU, PROMPT_PLAYER_NAME,
+use super::cmdln_interface::{TO_MAIN, ESCAPE_CHAR, PLAYER_ATTRIBUTE_MENU, PROMPT_PLAYER_NAME,
     PROMPT_PLAYER_SPRITE, PROMPT_PLAYER_TYPE};
 
 /// This function is used to take a player list to allow user selection of

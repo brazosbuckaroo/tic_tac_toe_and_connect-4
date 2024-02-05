@@ -1,10 +1,11 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 mod game_lib;
+mod ui_lib;
 
 use std::mem;
-use game_lib::{MAIN_MENU, WHICH_PLAYER, GAME_EDITOR, PLAY_AGAIN};
-use game_lib::general_input::{get_int_input, get_str_input};
+use ui_lib::cmdln_interface::{MAIN_MENU, WHICH_PLAYER, GAME_EDITOR, PLAY_AGAIN};
+use ui_lib::cmdln_interface::{get_int_input, get_str_input};
 use game_lib::player::{List, Player, ControlMode, Sprite};
 use game_lib::player::ai_engine::simple_think;
 use game_lib::player_editor::player_editor;

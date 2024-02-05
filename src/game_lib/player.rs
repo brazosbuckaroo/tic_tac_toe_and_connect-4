@@ -272,7 +272,8 @@ impl fmt::Display for Sprite {
 /// There is a very basic dumb `Ai` implemented until actual algorithms can be
 /// implemented.
 pub mod ai_engine {
-    use rand::prelude::*;
+    use rand::Rng;
+    use rand::seq::IteratorRandom;
     use super::Sprite;
     use super::Mode;
 

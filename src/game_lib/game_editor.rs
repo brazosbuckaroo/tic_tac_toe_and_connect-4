@@ -1,5 +1,5 @@
-use super::{TO_MAIN, GAME_MODE_SEL, BOARD_SIZE_SEL};
-use super::general_input::get_int_input;
+use super::cmdln_interface::{TO_MAIN, GAME_MODE_SEL, BOARD_SIZE_SEL};
+use super::cmdln_interface::get_int_input;
 use super::player::Sprite;
 use super::game::{Game, Mode};
 

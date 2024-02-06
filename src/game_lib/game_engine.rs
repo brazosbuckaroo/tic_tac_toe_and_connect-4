@@ -147,9 +147,7 @@ pub fn edit_board<'a>(
             let mut cell_below = selected_cell + (size - 1);
 
             for _ in 0..size {
-                if board[cell_below] == Sprite::default() && 
-                    cell_below + size < board.capacity() 
-                {
+                if board[cell_below] == Sprite::default() && cell_below + size < board.capacity() {
                     cell_below += size;
                 }
             }
@@ -170,6 +168,98 @@ pub fn edit_board<'a>(
     }
 
     board
+}
+
+/// This function is used to check the game's status
+///
+/// # Arguments
+///
+/// * `game` - \
+///    A reference to a Game struct
+/// * `player` - \
+///    A reference to a Sprite struct that was used to represent the player
+///
+/// # Returns
+///
+/// * `State::Won` - \
+///    Tells the game that a player has won
+/// * `State::NotOver` - \
+///    Tella the game that the is still active
+/// * `State::Tie` - \
+///    Tells the game that it was a tie
+///
+///  # Examples
+///
+/// Basic Usage:
+///
+/// ```
+/// use super::game::{Game, Mode, MoveStatus};
+/// use super::player::Sprite;
+///
+/// let mut game = Game::tic_tac_toe();
+/// let player_1 = Player::human(String::from("P1"), Sprite::new("X"));
+/// let player_2 = Player::human(String::from("P2"), Sprite::new("0"));
+///
+/// game.board = edit_board(
+///     game.board, 
+///     game.size, 
+///     game.mode, 
+///     &player_1.sprite, 
+///     &player_2.sprite, 
+///     1,
+/// );
+/// game.update_turns();
+/// game.board = edit_board(
+///     game.board, 
+///     game.size, 
+///     game.mode, 
+///     &player_1.sprite, 
+///     &player_2.sprite, 
+///     2,
+/// );
+/// game.update_turns();
+/// game.board = edit_board(
+///     game.board, 
+///     game.size, 
+///     game.mode, 
+///     &player_1.sprite, 
+///     &player_2.sprite, 
+///     3,
+/// );
+/// game.update_turns();
+/// game.board = edit_board(
+///     game.board, 
+///     game.size, 
+///     game.mode, 
+///     &player_1.sprite, 
+///     &player_2.sprite, 
+///     5,
+/// );
+/// game.update_turns();
+/// game.board = edit_board(
+///     game.board, 
+///     game.size, 
+///     game.mode, 
+///     &player_1.sprite, 
+///     &player_2.sprite, 
+///     6,
+/// );
+/// game.update_turns();
+///
+/// assert_equals!(game.state, State::Won);
+/// ```
+pub fn change_status(game: &Game, player: &Sprite) -> State  {
+    if game.num_of_turns >= game.size + 2 {
+        if ttt_cnct_four_board_check(&game.board, game.size, player) {
+            eprintln!("fuck a duck");
+
+            return State::Won;
+        } else if game.num_of_turns == game.board.capacity() {  
+            return State::Tie;
+        }
+    }
+
+    State::NotOver 
 }
 
 /// This function is used to see if the given player has won the game
@@ -317,96 +407,4 @@ fn ttt_cnct_four_board_check(board: &[Sprite], size: usize, player: &Sprite) -> 
     }
 
     false
-}
-
-/// This function is used to check the game's status
-///
-/// # Arguments
-///
-/// * `game` - \
-///    A reference to a Game struct
-/// * `player` - \
-///    A reference to a Sprite struct that was used to represent the player
-///
-/// # Returns
-///
-/// * `State::Won` - \
-///    Tells the game that a player has won
-/// * `State::NotOver` - \
-///    Tella the game that the is still active
-/// * `State::Tie` - \
-///    Tells the game that it was a tie
-///
-///  # Examples
-///
-/// Basic Usage:
-///
-/// ```
-/// use super::game::{Game, Mode, MoveStatus};
-/// use super::player::Sprite;
-///
-/// let mut game = Game::tic_tac_toe();
-/// let player_1 = Player::human(String::from("P1"), Sprite::new("X"));
-/// let player_2 = Player::human(String::from("P2"), Sprite::new("0"));
-///
-/// game.board = edit_board(
-///     game.board, 
-///     game.size, 
-///     game.mode, 
-///     &player_1.sprite, 
-///     &player_2.sprite, 
-///     1,
-/// );
-/// game.update_turns();
-/// game.board = edit_board(
-///     game.board, 
-///     game.size, 
-///     game.mode, 
-///     &player_1.sprite, 
-///     &player_2.sprite, 
-///     2,
-/// );
-/// game.update_turns();
-/// game.board = edit_board(
-///     game.board, 
-///     game.size, 
-///     game.mode, 
-///     &player_1.sprite, 
-///     &player_2.sprite, 
-///     3,
-/// );
-/// game.update_turns();
-/// game.board = edit_board(
-///     game.board, 
-///     game.size, 
-///     game.mode, 
-///     &player_1.sprite, 
-///     &player_2.sprite, 
-///     5,
-/// );
-/// game.update_turns();
-/// game.board = edit_board(
-///     game.board, 
-///     game.size, 
-///     game.mode, 
-///     &player_1.sprite, 
-///     &player_2.sprite, 
-///     6,
-/// );
-/// game.update_turns();
-///
-/// assert_equals!(game.state, State::Won);
-/// ```
-pub fn change_status(game: &Game, player: &Sprite) -> State  {
-    if game.num_of_turns >= game.size + 2 {
-        if ttt_cnct_four_board_check(&game.board, game.size, player) {
-            eprintln!("fuck a duck");
-
-            return State::Won;
-        } else if game.num_of_turns == game.board.capacity() {  
-            return State::Tie;
-        }
-    }
-
-    State::NotOver 
 }

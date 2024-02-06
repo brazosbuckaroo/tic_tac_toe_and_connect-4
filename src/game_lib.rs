@@ -17,5 +17,9 @@ pub mod game_editor;
 /// This module is simlar to the Game Editor module but is specifically meant for 
 /// editing Player structs.
 pub mod player_editor;
+/// This modules contines all the logic related to how ai function in the engine.
+/// There is a very basic dumb `Ai` implemented until actual algorithms can be
+/// implemented.
+pub mod ai_engine;
 
 use super::ui_lib::cmdln_interface;

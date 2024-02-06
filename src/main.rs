@@ -7,7 +7,7 @@ use std::mem;
 use ui_lib::cmdln_interface::{MAIN_MENU, WHICH_PLAYER, GAME_EDITOR, PLAY_AGAIN};
 use ui_lib::cmdln_interface::{get_int_input, get_str_input};
 use game_lib::player::{List, Player, ControlMode, Sprite};
-use game_lib::player::ai_engine::simple_think;
+use game_lib::ai_engine::simple_think;
 use game_lib::player_editor::player_editor;
 use game_lib::game::{Game, State, MoveStatus};
 use game_lib::game_editor::game_editor;
@@ -56,7 +56,7 @@ fn main() {
 
                         let player_move = match &current_player.control {
                             ControlMode::Human => {
-                                    if let Some(val) = get_int_input("Make a move: ") {
+                                    if let Some(val) = get_int_input("Make a move (`q` to end roud): ") {
                                         val
                                     } else {
                                         eprintln!("Exiting game...");
